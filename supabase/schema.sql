@@ -67,6 +67,8 @@ alter table location_confirmations enable row level security;
 alter table proposals enable row level security;
 alter table proposal_votes enable row level security;
 
+-- โปรเจกต์ใหม่ของ Supabase ไม่ให้สิทธิ์ตารางอัตโนมัติ: ให้ผู้ใช้ที่ล็อกอินอ่านโปรไฟล์ของตัวเองได้ (กรองด้วย policy ด้านล่าง)
+grant select on profiles to authenticated;
 drop policy if exists "read own profile" on profiles;
 create policy "read own profile" on profiles for select to authenticated using (id = auth.uid());
 
