@@ -66,7 +66,10 @@ em { font-family: var(--serif); font-style: italic; font-weight: 400; }
 .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 20px; letter-spacing: -.01em; }
 .brand em { font-size: 23px; color: var(--accent-2); margin-left: 1px; }
 .brand img { border-radius: 10px; box-shadow: 0 0 0 1px var(--line); }
-.user-area { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+.user-area { display: flex; align-items: center; gap: 8px; font-size: 14px; min-width: 0; }
+.user-area span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 34vw; }
+.brand, .chip { white-space: nowrap; }
+@media (max-width: 420px) { .brand { font-size: 17px; } .brand em { font-size: 20px; } .brand img { width: 30px; height: 30px; } }
 
 .demo-bar {
   display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
@@ -85,6 +88,8 @@ em { font-family: var(--serif); font-style: italic; font-weight: 400; }
   .layout { flex-direction: row-reverse; padding: 0 20px 20px; gap: 20px; }
   .map-wrap { flex: 1; height: auto; margin: 0; }
   .list-wrap { flex: 0 0 440px; padding: 0 4px 110px 0; }
+  /* จอใหญ่: วางปุ่มแชร์ไว้ใต้คอลัมน์รายการ ไม่ให้ทับแผนที่ */
+  body .fab { right: auto; left: 20px; }
 }
 
 /* ---------- ส่วนหัวแนะนำ ---------- */

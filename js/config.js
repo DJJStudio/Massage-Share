@@ -2,8 +2,8 @@
 // - ปล่อย SUPABASE_URL ว่างไว้ = โหมดทดลอง (เก็บข้อมูลในเบราว์เซอร์ มีผู้ใช้จำลองให้สลับ)
 // - ใส่ค่าจาก Supabase (Project Settings > API) = โหมดจริง
 export const CONFIG = {
-  SUPABASE_URL: '',
-  SUPABASE_ANON_KEY: '',
+  SUPABASE_URL: 'https://grgdlcxslhibbcoqtyly.supabase.co',
+  SUPABASE_ANON_KEY: 'sb_publishable_YXrsK7gwdmS5Z5YE-SzbzQ_1LPBpgPB', // publishable key — เปิดเผยได้
 
   // Google AdSense (เว็บ) — ได้หลังสมัครและเว็บผ่านการอนุมัติ
   // ADSENSE_CLIENT เช่น 'ca-pub-1234567890123456', ADSENSE_SLOT เช่น '1234567890'

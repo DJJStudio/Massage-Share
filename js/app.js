@@ -54,8 +54,9 @@ function tiles() {
 }
 
 function initMap() {
-  map = L.map('map', { zoomControl: false }).setView([CONFIG.DEFAULT_CENTER.lat, CONFIG.DEFAULT_CENTER.lng], 15);
+  map = L.map('map', { zoomControl: false, attributionControl: false }).setView([CONFIG.DEFAULT_CENTER.lat, CONFIG.DEFAULT_CENTER.lng], 15);
   L.control.zoom({ position: 'topright' }).addTo(map);
+  L.control.attribution({ position: 'bottomleft', prefix: false }).addTo(map); // มุมขวาล่างมีปุ่มตำแหน่งของฉัน
   tiles().addTo(map);
   markers = L.layerGroup().addTo(map);
   $('#locateBtn').onclick = () => locate(true);
