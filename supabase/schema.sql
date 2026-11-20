@@ -140,7 +140,7 @@ begin
       end if;
     when 'prices' then
       select coalesce(jsonb_agg(jsonb_build_object('baht', b, 'minutes', m) order by m, b), '[]'::jsonb) into v
-      from (select (e->>'baht')::numeric as b, round((e->>'minutes')::numeric)::int as m
+      from (select trim_scale((e->>'baht')::numeric) as b, round((e->>'minutes')::numeric)::int as m
             from jsonb_array_elements(p_value) e) x
       where b > 0 and m > 0;
       if jsonb_array_length(v) = 0 then raise exception 'กรุณาใส่ราคาอย่างน้อย 1 แบบ'; end if;
