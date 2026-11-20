@@ -1,3 +1,6 @@
 .claude/
 *.log
 node_modules/
+client_secret_*.json
+*.secret
+.env
