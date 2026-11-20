@@ -1,0 +1,14 @@
+{
+  "name": "Massage Share",
+  "short_name": "Massage Share",
+  "description": "แผนที่เก้าอี้นวดหยอดเหรียญใกล้คุณ",
+  "lang": "th",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f6f7f5",
+  "theme_color": "#0f766e",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

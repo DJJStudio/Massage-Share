@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Massage Share: หมุดแผนที่ + คนนอนเอนบนเก้าอี้นวด -->
+  <rect width="64" height="64" rx="18" fill="#2e3b2b"/>
+  <path d="M32 58S12 40.5 12 25.5a20 20 0 0 1 40 0C52 40.5 32 58 32 58z" fill="#f4f1ea"/>
+  <g transform="translate(11 6.2) scale(.62)">
+    <g fill="#2e3b2b">
+      <rect x="21" y="37" width="19" height="10" rx="5"/>
+      <rect x="29" y="45" width="3.2" height="6"/>
+      <rect x="23" y="50.4" width="15.2" height="3.4" rx="1.7"/>
+    </g>
+    <path d="M15 15 23.5 37Q25 41 29 41H38L46.5 50" fill="none" stroke="#2e3b2b" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="30.6" cy="42" r="2.9" fill="none" stroke="#f4f1ea" stroke-width="1.8"/>
+    <path d="M26 20.5 31.5 31.5 41 30.5 48.5 40.5" fill="none" stroke="#f4f1ea" stroke-width="9.4" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M26 20.5 31.5 31.5 41 30.5 48.5 40.5" fill="none" stroke="#2e3b2b" stroke-width="5.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="24.6" cy="13.8" r="4.4" fill="#2e3b2b" stroke="#f4f1ea" stroke-width="1.9"/>
+  </g>
+</svg>
