@@ -522,7 +522,7 @@ function setupDialogs() {
   });
   $('#addBtn').onclick = () => openAdd();
   $('#addForm').onsubmit = submitAdd;
-  $('#addForm [name=photos]').onchange = async e => {
+  const onPhotos = async e => {
     const files = [...e.target.files];
     e.target.value = '';
     if (!files.length || !addCtx) return;
@@ -535,6 +535,7 @@ function setupDialogs() {
     }
     renderAddThumbs();
   };
+  document.querySelectorAll('#addForm [name=photos]').forEach(i => i.onchange = onPhotos);
   $('#addThumbs').onclick = e => {
     const b = e.target.closest('[data-rm]');
     if (!b) return;
