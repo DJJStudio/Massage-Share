@@ -144,8 +144,11 @@ function groupLocations(list) {
 function siblingsOf(l) {
   return groupLocations(state.locations).find(g => g.items.some(x => x.id === l.id))?.items || [l];
 }
+const floorLabel = l => (!l.floor || l.floor === '-') ? 'ไม่ระบุชั้น' : `ชั้น ${l.floor}`;
+const brandsOf = items => [...new Set(items.map(l => l.brand).filter(Boolean))];
 function floorsText(items) {
-  return 'ชั้น ' + items.map(l => l.floor).join(', ');
+  const floors = [...new Set(items.map(l => l.floor).filter(f => f && f !== '-'))];
+  return floors.length ? 'ชั้น ' + floors.join(', ') : 'ไม่ระบุชั้น';
 }
 
 function renderMarkers() {
@@ -156,7 +159,8 @@ function renderMarkers() {
     const m = n === 1
       ? L.circleMarker([l.lat, l.lng], { radius: 10, color: '#fff', weight: 2, fillColor: markerColor(l), fillOpacity: 1 })
       : L.marker([l.lat, l.lng], { icon: L.divIcon({ className: 'group-pin', html: `<span style="background:${markerColor(best)}">${n}</span>`, iconSize: [30, 30] }) });
-    m.bindTooltip(`${esc(l.place)} · ${esc(floorsText(g.items))}`)
+    const brands = brandsOf(g.items);
+    m.bindTooltip(`${esc(l.place)}${brands.length ? ' · ' + esc(brands.join(', ')) : ''} · ${esc(floorsText(g.items))}`)
       .on('click', () => openDetail(l.id))
       .addTo(markers);
   }
@@ -198,7 +202,8 @@ function renderList() {
       <div class="card-foot">
         <div>
           <div class="card-title">${esc(l.place)}</div>
-          <div class="card-sub">${multi ? `${g.items.length} จุด · ${esc(floorsText(g.items))}` : `ชั้น ${esc(l.floor)}${l.zone ? ' · ' + esc(l.zone) : ''}`}</div>
+          ${brandsOf(g.items).length ? `<div class="card-brands">${brandsOf(g.items).map(b => `<span class="brand-tag">${esc(b)}</span>`).join('')}</div>` : ''}
+          <div class="card-sub">${multi ? `${g.items.length} จุด · ${esc(floorsText(g.items))}` : `${esc(floorLabel(l))}${l.zone ? ' · ' + esc(l.zone) : ''}`}</div>
           <div class="card-price">${esc(formatPrices(l.prices))}</div>
         </div>
         <span class="round-btn" aria-hidden="true">→</span>
@@ -275,11 +280,12 @@ async function openDetail(id) {
 
   const sibs = siblingsOf(l);
   const floorTabs = sibs.length > 1
-    ? `<div class="floor-tabs" role="tablist">${sibs.map(s => `<button type="button" role="tab" class="floor-tab${s.id === l.id ? ' on' : ''}" data-floor-id="${esc(s.id)}" aria-selected="${s.id === l.id}">ชั้น ${esc(s.floor)}</button>`).join('')}</div>`
+    ? `<div class="floor-tabs" role="tablist">${sibs.map(s => `<button type="button" role="tab" class="floor-tab${s.id === l.id ? ' on' : ''}" data-floor-id="${esc(s.id)}" aria-selected="${s.id === l.id}">${esc(floorLabel(s))}${s.brand && brandsOf(sibs).length > 1 ? ` · ${esc(s.brand)}` : ''}</button>`).join('')}</div>`
     : '';
   const body = $('#detailBody');
   body.innerHTML = `
     <div class="sheet-head"><h2>${esc(l.place)}</h2><button type="button" class="icon-btn" data-close>✕</button></div>
+    ${l.brand ? `<div class="card-brands"><span class="brand-tag">${esc(l.brand)}</span></div>` : ''}
     ${floorTabs}
     ${badgesHtml(l)}
     <div class="photos">${(l.photos || []).map(src => `<img src="${esc(src)}" alt="รูปเก้าอี้นวด" loading="lazy">`).join('')}</div>
