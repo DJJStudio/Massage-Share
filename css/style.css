@@ -246,7 +246,10 @@ dialog.sheet::backdrop { background: rgba(20, 18, 14, .5); backdrop-filter: blur
 .checks input { accent-color: var(--accent); }
 .pick-map { height: 210px; border-radius: var(--radius-sm); overflow: hidden; margin-top: 8px; }
 .thumbs { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
-.thumbs img { width: 68px; height: 68px; object-fit: cover; border-radius: 12px; }
+.thumbs img { width: 68px; height: 68px; object-fit: cover; border-radius: 12px; display: block; }
+.thumbs .thumb { position: relative; }
+.thumbs .thumb button { position: absolute; top: -6px; right: -6px; width: 24px; height: 24px; border-radius: 50%; border: 0; background: var(--text); color: var(--bg); font-size: 12px; line-height: 24px; padding: 0; cursor: pointer; }
+.photo-pick { display: inline-flex; margin: 6px 8px 0 0; cursor: pointer; }
 
 .toast {
   position: fixed; left: 50%; bottom: 92px; transform: translate(-50%, 20px); z-index: 2000;

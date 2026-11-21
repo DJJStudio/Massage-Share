@@ -389,6 +389,7 @@ function openAdd() {
   const form = $('#addForm');
   form.reset();
   $('#addThumbs').innerHTML = '';
+  $('#photoNote').textContent = '';
   $('#placeList').innerHTML = [...new Set(state.locations.map(l => l.place))].map(p => `<option value="${esc(p)}">`).join('');
   addCtx = {
     photos: [],
@@ -417,8 +418,10 @@ async function submitAdd(e) {
   const f = new FormData(e.target);
   const btn = $('button[type=submit]', e.target);
   btn.disabled = true;
+  const label = btn.innerHTML;
   try {
     await requireUser();
+    btn.textContent = 'กำลังอัปโหลด…';
     const data = {
       lat: addCtx.pin.lat, lng: addCtx.pin.lng,
       place: f.get('place'), floor: f.get('floor'), zone: f.get('zone'),
@@ -434,24 +437,60 @@ async function submitAdd(e) {
     toast(err.message, true);
   } finally {
     btn.disabled = false;
+    btn.innerHTML = label;
   }
 }
 
-// ย่อรูปก่อนอัปโหลด (ด้านยาวสุด 1024px, JPEG)
-function resizeImage(file, max = 1024) {
+function renderAddThumbs() {
+  const n = addCtx.photos.length;
+  $('#photoNote').textContent = n ? `เลือกแล้ว ${n} รูป` : '';
+  $('#addThumbs').innerHTML = addCtx.photos.map((url, i) =>
+    `<span class="thumb"><img src="${url}" alt=""><button type="button" data-rm="${i}" aria-label="ลบรูป">✕</button></span>`).join('');
+}
+
+function loadImage(blob) {
   return new Promise((res, rej) => {
     const img = new Image();
-    img.onload = () => {
-      const k = Math.min(1, max / Math.max(img.width, img.height));
-      const c = document.createElement('canvas');
-      c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
-      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-      URL.revokeObjectURL(img.src);
-      res(c.toDataURL('image/jpeg', 0.75));
-    };
-    img.onerror = () => rej(new Error('เปิดไฟล์รูปไม่ได้'));
-    img.src = URL.createObjectURL(file);
+    const src = URL.createObjectURL(blob);
+    img.onload = () => { URL.revokeObjectURL(src); res(img); };
+    img.onerror = () => { URL.revokeObjectURL(src); rej(new Error('decode')); };
+    img.src = src;
   });
+}
+
+let heicLib = null;
+function loadHeicLib() {
+  heicLib ||= new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js';
+    s.onload = () => res(window.heic2any);
+    s.onerror = () => { heicLib = null; rej(new Error('โหลดตัวแปลงรูปไม่สำเร็จ')); };
+    document.head.appendChild(s);
+  });
+  return heicLib;
+}
+
+// ย่อรูปก่อนอัปโหลด (ด้านยาวสุด 1024px, JPEG) รองรับ HEIC จากมือถือบางรุ่น
+async function resizeImage(file, max = 1024) {
+  let img;
+  try {
+    img = await loadImage(file);
+  } catch {
+    const isHeic = /hei[cf]/i.test(file.type) || /\.hei[cf]$/i.test(file.name || '');
+    if (!isHeic) throw new Error(`เปิดรูป "${file.name || ''}" ไม่ได้ ลองถ่ายใหม่หรือเลือกรูปอื่น`);
+    try {
+      const heic2any = await loadHeicLib();
+      const out = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.8 });
+      img = await loadImage(Array.isArray(out) ? out[0] : out);
+    } catch {
+      throw new Error('แปลงรูป HEIC ไม่สำเร็จ ลองตั้งกล้องให้บันทึกเป็น JPG');
+    }
+  }
+  const k = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+  const c = document.createElement('canvas');
+  c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k);
+  c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+  return c.toDataURL('image/jpeg', 0.75);
 }
 
 // ---------- ผูกเหตุการณ์ ----------
@@ -463,14 +502,23 @@ function setupDialogs() {
   $('#addBtn').onclick = () => openAdd();
   $('#addForm').onsubmit = submitAdd;
   $('#addForm [name=photos]').onchange = async e => {
-    for (const file of e.target.files) {
+    const files = [...e.target.files];
+    e.target.value = '';
+    if (!files.length || !addCtx) return;
+    const note = $('#photoNote');
+    note.textContent = 'กำลังเตรียมรูป…';
+    for (const file of files) {
       try {
-        const url = await resizeImage(file);
-        addCtx.photos.push(url);
-        $('#addThumbs').insertAdjacentHTML('beforeend', `<img src="${url}" alt="">`);
+        addCtx.photos.push(await resizeImage(file));
       } catch (err) { toast(err.message, true); }
     }
-    e.target.value = '';
+    renderAddThumbs();
+  };
+  $('#addThumbs').onclick = e => {
+    const b = e.target.closest('[data-rm]');
+    if (!b) return;
+    addCtx.photos.splice(Number(b.dataset.rm), 1);
+    renderAddThumbs();
   };
   $('#editForm').onsubmit = async e => {
     e.preventDefault();

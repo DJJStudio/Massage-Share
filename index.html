@@ -78,7 +78,8 @@
         <label class="field">ยี่ห้อ / รุ่น<input name="brand"></label>
       </div>
       <div class="field">รูปภาพ * (อย่างน้อย 1 รูป)
-        <input name="photos" type="file" accept="image/*" multiple>
+        <label class="btn photo-pick">📷 ถ่ายรูป / เลือกรูป<input name="photos" type="file" accept="image/*" multiple hidden></label>
+        <span id="photoNote" class="muted small"></span>
         <div class="thumbs" id="addThumbs"></div>
       </div>
       <button class="btn primary block" type="submit">แชร์จุดนี้ <span class="dot">→</span></button>
