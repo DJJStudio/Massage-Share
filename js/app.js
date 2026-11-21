@@ -398,6 +398,8 @@ function openAdd() {
     pin: { ...state.pos },
   };
   $('#addDlg').showModal();
+  // มือถือ: ไม่ให้แป้นพิมพ์เด้งขึ้นมาบังทันทีที่เปิดฟอร์ม
+  if (matchMedia('(pointer: coarse)').matches) document.activeElement?.blur();
   // แผนที่เล็กสำหรับปักหมุด
   if (!openAdd.map) {
     const m = L.map('pickMap', { zoomControl: true, attributionControl: false });
