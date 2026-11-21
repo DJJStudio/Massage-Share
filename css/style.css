@@ -271,3 +271,8 @@ dialog.sheet::backdrop { background: rgba(20, 18, 14, .5); backdrop-filter: blur
 .photo-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
 .photo-btns .photo-pick { margin: 6px 0 0; }
 .photo-note { display: block; color: var(--accent); font-weight: 600; margin-top: 4px; }
+.group-pin { background: none; border: 0; }
+.group-pin span { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; border: 2px solid #fff; color: #fff; font: 600 13px/1 "IBM Plex Sans Thai", system-ui, sans-serif; box-shadow: 0 1px 4px rgba(0,0,0,.35); box-sizing: border-box; }
+.floor-tabs { display: flex; gap: 6px; overflow-x: auto; margin: 10px 0 4px; padding-bottom: 2px; scrollbar-width: none; }
+.floor-tab { flex: none; border: 1px solid var(--line, rgba(0,0,0,.15)); background: transparent; color: inherit; border-radius: 999px; padding: 6px 14px; font: inherit; font-size: 14px; cursor: pointer; white-space: nowrap; }
+.floor-tab.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }

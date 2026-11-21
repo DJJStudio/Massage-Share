@@ -120,12 +120,43 @@ function markerColor(l) {
   return '#2e3b2b';
 }
 
+// จุดที่อยู่สถานที่เดียวกัน (ชื่อเดียวกัน ห่างกันไม่เกิน ~30 ม.) รวมเป็นหมุดเดียว แยกดูทีละชั้น
+const FLOOR_ORDER = ['B3', 'B2', 'B1', 'B', 'LG', 'P', 'G', 'L', 'M', 'UG'];
+function floorRank(f) {
+  const i = FLOOR_ORDER.indexOf(String(f).toUpperCase());
+  if (i >= 0) return i - FLOOR_ORDER.length;
+  const n = parseFloat(f);
+  return Number.isFinite(n) ? n : 1000;
+}
+function groupLocations(list) {
+  const groups = [];
+  for (const l of list) {
+    const g = groups.find(g => g.place === l.place && distanceM(g.items[0], l) <= 30);
+    if (g) g.items.push(l); else groups.push({ place: l.place, items: [l] });
+  }
+  for (const g of groups) {
+    g.items.sort((a, b) => (a.condition === 'removed') - (b.condition === 'removed') || floorRank(a.floor) - floorRank(b.floor));
+    g.main = g.items[0];
+    g.distance = Math.min(...g.items.map(l => l.distance ?? Infinity));
+  }
+  return groups;
+}
+function siblingsOf(l) {
+  return groupLocations(state.locations).find(g => g.items.some(x => x.id === l.id))?.items || [l];
+}
+function floorsText(items) {
+  return 'ชั้น ' + items.map(l => l.floor).join(', ');
+}
+
 function renderMarkers() {
   markers.clearLayers();
-  for (const l of state.locations) {
-    if (l.condition === 'removed') continue;
-    L.circleMarker([l.lat, l.lng], { radius: 10, color: '#fff', weight: 2, fillColor: markerColor(l), fillOpacity: 1 })
-      .bindTooltip(`${esc(l.place)} · ชั้น ${esc(l.floor)}`)
+  for (const g of groupLocations(state.locations.filter(l => l.condition !== 'removed'))) {
+    const l = g.main, n = g.items.length;
+    const best = g.items.find(x => x.condition === 'working' && x.status === 'verified') || l;
+    const m = n === 1
+      ? L.circleMarker([l.lat, l.lng], { radius: 10, color: '#fff', weight: 2, fillColor: markerColor(l), fillOpacity: 1 })
+      : L.marker([l.lat, l.lng], { icon: L.divIcon({ className: 'group-pin', html: `<span style="background:${markerColor(best)}">${n}</span>`, iconSize: [30, 30] }) });
+    m.bindTooltip(`${esc(l.place)} · ${esc(floorsText(g.items))}`)
       .on('click', () => openDetail(l.id))
       .addTo(markers);
   }
@@ -146,25 +177,28 @@ function renderList() {
   renderStats();
   const list = $('#list');
   list.innerHTML = '';
-  const items = [...state.locations].sort((a, b) => (a.condition === 'removed') - (b.condition === 'removed') || a.distance - b.distance);
+  const items = groupLocations(state.locations)
+    .sort((a, b) => (a.main.condition === 'removed') - (b.main.condition === 'removed') || a.distance - b.distance);
   if (!items.length) {
     list.innerHTML = '<div class="empty">ยังไม่มีใครแชร์จุดแถวนี้<br>เป็นคนแรกที่แชร์ด้วยปุ่ม “＋ แชร์จุดใหม่”</div>';
     return;
   }
-  items.forEach((l, i) => {
+  items.forEach((g, i) => {
+    const l = g.main, multi = g.items.length > 1;
+    const photo = g.items.find(x => x.photos?.length)?.photos[0];
     const card = document.createElement('button');
     card.type = 'button';
     card.className = 'card' + (l.condition === 'removed' ? ' dim' : '');
     card.innerHTML = `
       <div class="card-media">
-        <img src="${esc(l.photos?.[0] || 'icon.svg')}" alt="" loading="lazy">
+        <img src="${esc(photo || 'icon.svg')}" alt="" loading="lazy">
         ${badgesHtml(l)}
-        <span class="card-dist">${formatDistance(l.distance)}</span>
+        <span class="card-dist">${formatDistance(g.distance)}</span>
       </div>
       <div class="card-foot">
         <div>
           <div class="card-title">${esc(l.place)}</div>
-          <div class="card-sub">ชั้น ${esc(l.floor)}${l.zone ? ' · ' + esc(l.zone) : ''}</div>
+          <div class="card-sub">${multi ? `${g.items.length} จุด · ${esc(floorsText(g.items))}` : `ชั้น ${esc(l.floor)}${l.zone ? ' · ' + esc(l.zone) : ''}`}</div>
           <div class="card-price">${esc(formatPrices(l.prices))}</div>
         </div>
         <span class="round-btn" aria-hidden="true">→</span>
@@ -239,9 +273,14 @@ async function openDetail(id) {
     tile('route', 'ระยะจากคุณ', formatDistance(d) || '-'),
   ].join('');
 
+  const sibs = siblingsOf(l);
+  const floorTabs = sibs.length > 1
+    ? `<div class="floor-tabs" role="tablist">${sibs.map(s => `<button type="button" role="tab" class="floor-tab${s.id === l.id ? ' on' : ''}" data-floor-id="${esc(s.id)}" aria-selected="${s.id === l.id}">ชั้น ${esc(s.floor)}</button>`).join('')}</div>`
+    : '';
   const body = $('#detailBody');
   body.innerHTML = `
     <div class="sheet-head"><h2>${esc(l.place)}</h2><button type="button" class="icon-btn" data-close>✕</button></div>
+    ${floorTabs}
     ${badgesHtml(l)}
     <div class="photos">${(l.photos || []).map(src => `<img src="${esc(src)}" alt="รูปเก้าอี้นวด" loading="lazy">`).join('')}</div>
     <div class="tiles">${tiles}</div>
@@ -269,6 +308,7 @@ async function openDetail(id) {
   mountAd($('#detailAd'), CONFIG.ADSENSE_SLOT_DETAIL, store.mode === 'demo');
 
   body.querySelector('[data-close]').onclick = () => $('#detailDlg').close();
+  body.querySelectorAll('[data-floor-id]').forEach(b => b.onclick = () => openDetail(b.dataset.floorId));
   body.querySelectorAll('[data-act]').forEach(el => {
     const act = el.dataset.act;
     if (act === 'photo') el.onchange = () => run(async () => {
