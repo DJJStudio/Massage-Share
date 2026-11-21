@@ -476,23 +476,42 @@ function loadHeicLib() {
 async function resizeImage(file, max = 1024) {
   let img;
   try {
-    img = await loadImage(file);
+    img = await decodeImage(file);
   } catch {
-    const isHeic = /hei[cf]/i.test(file.type) || /\.hei[cf]$/i.test(file.name || '');
+    const isHeic = /hei[cf]/i.test(file.type) || /\.hei[cf]$/i.test(file.name || '') || await sniffHeic(file);
     if (!isHeic) throw new Error(`เปิดรูป "${file.name || ''}" ไม่ได้ ลองถ่ายใหม่หรือเลือกรูปอื่น`);
     try {
       const heic2any = await loadHeicLib();
       const out = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.8 });
-      img = await loadImage(Array.isArray(out) ? out[0] : out);
+      img = await decodeImage(Array.isArray(out) ? out[0] : out);
     } catch {
       throw new Error('แปลงรูป HEIC ไม่สำเร็จ ลองตั้งกล้องให้บันทึกเป็น JPG');
     }
   }
-  const k = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+  const w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+  const k = Math.min(1, max / Math.max(w, h));
   const c = document.createElement('canvas');
-  c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k);
+  c.width = Math.round(w * k); c.height = Math.round(h * k);
   c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+  img.close?.();
   return c.toDataURL('image/jpeg', 0.75);
+}
+
+// createImageBitmap ถอดรูปใหญ่ ๆ จากกล้องมือถือ (50–200MP) ได้ดีกว่า <img> และหมุนตาม EXIF ให้
+async function decodeImage(blob) {
+  if (window.createImageBitmap) {
+    try { return await createImageBitmap(blob, { imageOrientation: 'from-image' }); } catch {}
+  }
+  return loadImage(blob);
+}
+
+// ดูหัวไฟล์ว่าเป็น HEIC/HEIF ไหม (Samsung บางรุ่นไม่บอกชนิดไฟล์มา)
+async function sniffHeic(file) {
+  try {
+    const b = new Uint8Array(await file.slice(0, 16).arrayBuffer());
+    const s = String.fromCharCode(...b.slice(4, 12));
+    return /^ftyp(hei[cxms]|hev[cx]|mif1|msf1)/.test(s);
+  } catch { return false; }
 }
 
 // ---------- ผูกเหตุการณ์ ----------
